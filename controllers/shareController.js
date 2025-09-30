@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import { v4 as uuidv4 } from 'uuid';
 
 export const createShare = async (req, res) => {
-  const { days } = req.body; // 1,2,7
+  const { days } = req.body; 
   const daysNum = parseInt(days) || 1;
   const token = uuidv4();
   const expiresAt = new Date(Date.now() + daysNum * 24 * 60 * 60 * 1000);
@@ -18,12 +18,12 @@ export const viewShared = async (req, res) => {
   if (!share) return res.status(404).json({ message: 'Link invalid' });
   if (new Date() > share.expiresAt) return res.status(410).json({ message: 'Link expired' });
 
-  // log view
+
   const ip = req.ip || req.headers['x-forwarded-for'] || req.connection.remoteAddress;
   share.views.push({ ip, userAgent: req.headers['user-agent'], viewerId: req.user ? req.user._id : null });
   await share.save();
 
-  // prepare read-only profile
+  
   const user = share.user;
   const publicProfile = {
     photo: user.profilePhoto?.url,

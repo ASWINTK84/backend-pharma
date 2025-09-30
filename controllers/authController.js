@@ -19,13 +19,13 @@ export const register = async (req, res) => {
     const existing = await User.findOne({ email });
     if (existing) return res.status(400).json({ message: 'Email already used' });
 
-    // handle uploads from multer (buffers)
+    
     let profilePhoto = null;
     let resume = null;
     if (req.files && req.files.profilePhoto) {
       const file = req.files.profilePhoto[0];
       const upload = await cloudinary.uploader.upload_stream({ resource_type: 'image', folder: 'socrp/profile' }, (error, result) => {});
-      // easier: use uploader.upload with buffer by base64
+      
       const b64 = file.buffer.toString('base64');
       const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
       const result = await cloudinary.uploader.upload(dataUri, { folder: 'socrp/profile' });
@@ -35,7 +35,7 @@ export const register = async (req, res) => {
       const file = req.files.resume[0];
       const b64 = file.buffer.toString('base64');
       const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
-      // Cloudinary auto-detects resource_type
+      
       const result = await cloudinary.uploader.upload(dataUri, { folder: 'socrp/resume', resource_type: 'raw' });
       resume = { url: result.secure_url, public_id: result.public_id.split('/').pop(), filename: file.originalname };
     }
@@ -55,8 +55,8 @@ export const register = async (req, res) => {
     });
     await user.save();
 
-    // send verification token (short lived)
-    const token = signJwt({ id: user._id }, '1d'); // verification link valid 1 day
+   
+    const token = signJwt({ id: user._id }, '1d'); 
     await sendVerificationEmail(email, token);
 
     res.status(201).json({ message: 'Registered, check your email to verify' });

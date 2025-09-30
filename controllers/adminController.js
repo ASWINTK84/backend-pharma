@@ -29,12 +29,13 @@ export const editUser = async (req, res) => {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ message: 'Not found' });
 
-    // handle file updates
+    //  updates
+
    if (req.files && req.files.profilePhoto) {
          const file = req.files.profilePhoto[0];
          const b64 = file.buffer.toString('base64');
          const dataUri = 'data:' + file.mimetype + ';base64,' + b64;
-         // delete old if exists
+         
          if (user.profilePhoto && user.profilePhoto.public_id) {
            await cloudinary.uploader.destroy(user.profilePhoto.public_id);
          }
@@ -46,23 +47,23 @@ export const editUser = async (req, res) => {
      const b64 = file.buffer.toString('base64');
      const dataUri = `data:${file.mimetype};base64,${b64}`;
    
-     // Delete old resume if exists
+     
      if (user.resume && user.resume.public_id) {
        await cloudinary.uploader.destroy(user.resume.public_id, { resource_type: 'raw' });
      }
    
-     // Upload resume as raw
+     
      const result = await cloudinary.uploader.upload(dataUri, { folder: 'socrp/resume', resource_type: 'raw' });
    
      user.resume = { url: result.secure_url, public_id: result.public_id, filename: file.originalname };
    }
    
    
-       // update scalar fields and arrays (expect client to send arrays)
+       
        const fields = ['fullName','dob','gender','address','phone','skills','languages','education','experience'];
        fields.forEach(f => {
          if (req.body[f] !== undefined) {
-           // education/experience may be sent as JSON strings
+           
            if ((f === 'education' || f === 'experience') && typeof req.body[f] === 'string') {
              try { user[f] = JSON.parse(req.body[f]); } catch { user[f] = []; }
            } else if ((f === 'skills' || f === 'languages') && typeof req.body[f] === 'string') {
@@ -119,20 +120,20 @@ export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // check user exists
+   
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "Invalid credentials" });
 
-    // check admin
+    
     if (!user.isAdmin) {
       return res.status(403).json({ message: "Access denied. Not an admin." });
     }
 
-    // check password
+    
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid credentials" });
 
-    // generate token
+    
     const token = jwt.sign(
       { id: user._id, isAdmin: true },
       process.env.JWT_SECRET,
